@@ -47,7 +47,7 @@ class _InstalledAppsState extends State<InstalledApps> {
             future: _appsFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
+                return const Center(child: CircularProgressIndicator());
               } else {
                 List<Application> apps = snapshot.data as List<Application>;
                 apps.sort((a, b) => a.appName.compareTo(b.appName));

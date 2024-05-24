@@ -1,5 +1,6 @@
 package com.example.my_app_2
 
+import android.R as androidR
 import android.annotation.TargetApi
 import android.app.ActivityManager
 import android.app.Notification
@@ -20,9 +21,12 @@ import android.os.Build
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.RelativeLayout
 import androidx.core.app.NotificationCompat
 import com.example.my_app_2.R
 import java.util.concurrent.TimeUnit
@@ -30,7 +34,7 @@ import java.util.concurrent.TimeUnit
 class AppBlockerService : Service() {
 
     private lateinit var windowManager: WindowManager
-    private lateinit var overlayLayout: LinearLayout
+    private lateinit var overlayLayout: RelativeLayout
 
     private val handler = Handler()
     private lateinit var blockedApps: Set<String>
@@ -43,6 +47,11 @@ class AppBlockerService : Service() {
 
     private lateinit var countdownText: TextView
     private var countdownTimer: CountDownTimer? = null
+    private lateinit var progressBar : ProgressBar
+    private lateinit var textView : TextView
+    private lateinit var progressBar1 : ProgressBar
+    private lateinit var progressBar2 : ProgressBar
+
 
     override fun onCreate() {
         super.onCreate()
@@ -51,42 +60,60 @@ class AppBlockerService : Service() {
 //        blockedApps  = setOf("com.example.my_app_2", "com.google.android.youtube", "com.zhiliaoapp.musically")
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        overlayLayout = LinearLayout(this)
-        overlayLayout.orientation = LinearLayout.VERTICAL
-        overlayLayout.gravity = Gravity.CENTER
-        overlayLayout.setBackgroundColor(0x7F000000)
+        // Inflate the layout
+        val inflater = getSystemService(Context.LAYOUT_INFLATER_SERVICE) as LayoutInflater
+        overlayLayout = inflater.inflate(R.layout.overview_layout, null) as RelativeLayout
+        textView = overlayLayout.findViewById<TextView>(R.id.textView_timerview_time)
+        progressBar1 = overlayLayout.findViewById<ProgressBar>(R.id.progressbar_timerview)
+        progressBar2 = overlayLayout.findViewById<ProgressBar>(R.id.progressbar1_timerview)
 
-        val overlayImage = ImageView(this)
-        overlayImage.setImageResource(R.mipmap.ic_launcher)
-        overlayLayout.addView(overlayImage)
 
-        countdownText = TextView(this)
-        countdownText.setTextColor(0xFFFFFFFF.toInt())
-        countdownText.textSize = 24f
-        countdownText.gravity = Gravity.CENTER
-        overlayLayout.addView(countdownText)
-
-        val overlayText = TextView(this)
-        overlayText.text = "App Blocked, Take a Break!"
-//        overlayText.setBackgroundColor(0x7F000000)
-        overlayText.setTextColor(0xFFFFFFFF.toInt())
-        overlayText.textSize = 24f
-        overlayText.gravity = Gravity.CENTER
-        overlayLayout.addView(overlayText)
-
-        // Add a Button to the overlayLayout
-        val stopBlockingButton = Button(this)
-        stopBlockingButton.text = "Stop Blocking"
-        stopBlockingButton.setOnClickListener {
-            // Stop the service when the button is clicked
-            stopSelf()
-        }
-        overlayLayout.addView(stopBlockingButton)
-
+//        overlayLayout = LinearLayout(this)
+//        overlayLayout.orientation = LinearLayout.VERTICAL
+//        overlayLayout.gravity = Gravity.CENTER
+//        overlayLayout.setBackgroundColor(0x7F000000)
+//
+//        val overlayImage = ImageView(this)
+//        overlayImage.setImageResource(R.mipmap.ic_launcher)
+//        overlayLayout.addView(overlayImage)
+//
+//
+//        progressBar = ProgressBar(this, null, androidR.attr.progressBarStyleHorizontal)
+//        progressBar.layoutParams = LinearLayout.LayoutParams(
+//            LinearLayout.LayoutParams.WRAP_CONTENT,
+//            LinearLayout.LayoutParams.WRAP_CONTENT
+//        )
+//        progressBar.isIndeterminate = false
+//        progressBar.progressDrawable = resources.getDrawable(R.drawable.circular_progress_bar)
+//        overlayLayout.addView(progressBar)
+//
+//        countdownText = TextView(this)
+//        countdownText.setTextColor(0xFFFFFFFF.toInt())
+//        countdownText.textSize = 24f
+//        countdownText.gravity = Gravity.CENTER
+//        overlayLayout.addView(countdownText)
+//
+//        val overlayText = TextView(this)
+//        overlayText.text = "App Blocked, Take a Break!"
+////        overlayText.setBackgroundColor(0x7F000000)
+//        overlayText.setTextColor(0xFFFFFFFF.toInt())
+//        overlayText.textSize = 24f
+//        overlayText.gravity = Gravity.CENTER
+//        overlayLayout.addView(overlayText)
+//
+//        // Add a Button to the overlayLayout
+//        val stopBlockingButton = Button(this)
+//        stopBlockingButton.text = "Stop Blocking"
+//        stopBlockingButton.setOnClickListener {
+//            // Stop the service when the button is clicked
+//            stopSelf()
+//        }
+//        overlayLayout.addView(stopBlockingButton)
+//
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY else WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
             PixelFormat.TRANSLUCENT
         )
@@ -118,12 +145,26 @@ class AppBlockerService : Service() {
 
         blockDuration = intent?.getLongExtra("BLOCK_DURATION", 0L) ?: 0L
         if (blockDuration > 0) {
+
+
+            stopHandler = Handler()
+            blockStartTime = System.currentTimeMillis()
+            stopHandler?.postDelayed({
+                stopSelf()
+            }, blockDuration)
+
             countdownTimer = object : CountDownTimer(blockDuration, 1000) {
                 override fun onTick(millisUntilFinished: Long) {
                     val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
                     val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
                     val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
-                    countdownText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+//                    countdownText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                    textView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                    progressBar1.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+                    progressBar2.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+                    // Update the progress bar
+                    val progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+//                    progressBar.progress = progress
                 }
 
                 override fun onFinish() {
@@ -143,49 +184,7 @@ class AppBlockerService : Service() {
         return START_STICKY
     }
 
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        val blockedAppList = intent?.getStringArrayListExtra("BLOCK_APPS")
-//
-//        Log.e("blockedAppList 1", "blockedAppList: $blockedAppList")
-//        if (blockedAppList != null) {
-//            blockedApps = blockedAppList.toSet()
-//        }
-//
-//        blockDuration = intent?.getLongExtra("BLOCK_DURATION", 0L) ?: 0L
-//        if (blockDuration > 0) {
-//            countdownTimer = object : CountDownTimer(blockDuration, 1000) {
-//                @TargetApi(Build.VERSION_CODES.GINGERBREAD)
-//                override fun onTick(millisUntilFinished: Long) {
-//                    val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished)
-//                    val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
-//                    countdownText.text = String.format("%02d:%02d", minutes, seconds)
-//                }
-//
-//                override fun onFinish() {
-//                    stopSelf()
-//                }
-//            }.start()
-//            stopHandler = Handler()
-//            blockStartTime = System.currentTimeMillis()
-//            stopHandler?.postDelayed({
-//                stopSelf()
-//            }, blockDuration)
-//        }
-//
-//        // Create a notification
-//        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-//            .setContentTitle("App Blocker Service")
-//            .setContentText("Blocking distracting apps...")
-//            .setSmallIcon(R.mipmap.ic_launcher)
-//            .build()
-//
-//        // Start the service in the foreground with the notification
-//
-//
-//        startForeground(NOTIFICATION_ID, notification)
-//
-//        return START_STICKY
-//    }
+
 
     private val checkForegroundApp = object : Runnable {
         override fun run() {
@@ -196,9 +195,9 @@ class AppBlockerService : Service() {
 
 
             if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
-                overlayLayout.visibility = LinearLayout.VISIBLE
+                overlayLayout.visibility = RelativeLayout.VISIBLE
             } else {
-                overlayLayout.visibility = LinearLayout.GONE
+                overlayLayout.visibility = RelativeLayout.GONE
             }
             handler.postDelayed(this, 1000) // Check every second
         }

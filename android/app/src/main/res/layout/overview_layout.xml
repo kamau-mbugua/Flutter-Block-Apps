@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/reativelayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/activated_b"
+    android:fitsSystemWindows="false">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/group_19487"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="7dp"
+            android:gravity="center"
+            android:text="you can get back in"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+        <ProgressBar
+            android:id="@+id/progressbar_timerview"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginTop="15dp"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/circleshape2_timerview"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/group_19487" />
+
+        <TextView
+            android:id="@+id/textView_timerview_time"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:alpha="0.6"
+            android:background="@drawable/circleshape_timerview"
+            android:gravity="center"
+            android:text="00:00"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="@+id/progressbar1_timerview"
+            app:layout_constraintEnd_toEndOf="@+id/progressbar1_timerview"
+            app:layout_constraintStart_toStartOf="@+id/progressbar1_timerview"
+            app:layout_constraintTop_toTopOf="@+id/progressbar1_timerview" />
+
+        <ProgressBar
+            android:id="@+id/progressbar1_timerview"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="260dp"
+            android:layout_height="260dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center_horizontal|center"
+            android:layout_marginTop="15dp"
+            android:indeterminate="false"
+            android:progressDrawable="@drawable/circleshape1_timerview"
+            android:visibility="visible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/group_19487" />
+
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="Let's get you your Life \nback from Phone."
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressbar1_timerview" />
+
+        <ImageView
+            android:layout_width="145dp"
+            android:layout_height="145dp"
+            android:src="@drawable/img"
+            app:layout_constraintBottom_toTopOf="@+id/frame_26"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView1" />
+
+
+
+        <LinearLayout
+            android:id="@+id/frame_26"
+            android:layout_width="match_parent"
+            android:layout_height="61dp"
+            android:layout_margin="20dp"
+            android:background="@drawable/frame_26"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toTopOf="@+id/textView2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <TextView
+                android:id="@+id/textViewButttonText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="Share with someone who needs this →"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                app:layout_constraintBottom_toBottomOf="@+id/frame_26"
+                app:layout_constraintEnd_toEndOf="@+id/frame_26"
+                app:layout_constraintStart_toStartOf="@+id/frame_26"
+                app:layout_constraintTop_toTopOf="@+id/frame_26" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="@string/resist_interesting_yet_damaging_act_or_notion"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</RelativeLayout>
