@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
+import 'package:my_app_2/time_selection_bottom_sheet.dart';
 import 'AppBlockerService.dart';
 import 'database_helper.dart';
 
@@ -66,7 +67,8 @@ class _InstalledAppsState extends State<InstalledApps> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               } else {
-                if (snapshot.data != null) {
+                if (snapshot.data != null &&
+                    (snapshot.data as List).isNotEmpty) {
                   List<Map<String, dynamic>> appsFromDb =
                       snapshot.data as List<Map<String, dynamic>>;
                   return ListView.builder(
@@ -110,14 +112,16 @@ class _InstalledAppsState extends State<InstalledApps> {
                           icon: Icon(Icons.delete),
                           onPressed: () async {
                             DateTime expectedEndTime = startTime.add(Duration(
-                                milliseconds: app[DatabaseHelper.columnBlockDuration]));
+                                milliseconds:
+                                    app[DatabaseHelper.columnBlockDuration]));
                             if (DateTime.now().isBefore(expectedEndTime)) {
                               showDialog(
                                 context: context,
                                 builder: (BuildContext context) {
                                   return AlertDialog(
                                     title: Text('End App Blocking'),
-                                    content: Text('Are you sure you want to end app blocking?'),
+                                    content: Text(
+                                        'Are you sure you want to end app blocking?'),
                                     actions: <Widget>[
                                       TextButton(
                                         child: Text('Cancel'),
@@ -128,8 +132,11 @@ class _InstalledAppsState extends State<InstalledApps> {
                                       TextButton(
                                         child: Text('Confirm'),
                                         onPressed: () async {
-                                          await AppBlockerService.stopService();
-                                          await dbHelper.delete(app[DatabaseHelper.columnId]);
+                                          await AppBlockerService.stopService(
+                                              app[DatabaseHelper
+                                                  .columnPackageName]);
+                                          await dbHelper.delete(
+                                              app[DatabaseHelper.columnId]);
                                           setState(() {
                                             _dbFuture = dbHelper.queryAllRows();
                                           });
@@ -141,7 +148,8 @@ class _InstalledAppsState extends State<InstalledApps> {
                                 },
                               );
                             } else {
-                              await dbHelper.delete(app[DatabaseHelper.columnId]);
+                              await dbHelper
+                                  .delete(app[DatabaseHelper.columnId]);
                               setState(() {
                                 _dbFuture = dbHelper.queryAllRows();
                               });
@@ -206,12 +214,23 @@ class _InstalledAppsState extends State<InstalledApps> {
             },
           ),
         ),
-        TextField(
+        TextFormField(
           controller: _controller,
           keyboardType: TextInputType.number,
-          decoration: InputDecoration(
+          decoration: const InputDecoration(
             labelText: 'Block duration in milliseconds',
           ),
+          onTap: () {
+            FocusScope.of(context)
+                .requestFocus(FocusNode()); // to prevent opening the keyboard
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) {
+                // return TimePickerExample(controller: _controller);
+                return TimeSelectionBottomSheet(controller: _controller);
+              },
+            );
+          },
         ),
         ElevatedButton(
           onPressed: () async {

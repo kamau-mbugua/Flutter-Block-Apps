@@ -37,7 +37,7 @@ class AppBlockerService : Service() {
     private lateinit var overlayLayout: RelativeLayout
 
     private val handler = Handler()
-    private lateinit var blockedApps: Set<String>
+    private lateinit var blockedApps: MutableSet<String>
     private var stopHandler: Handler? = null
     private val NOTIFICATION_ID = 1
     private val CHANNEL_ID = "App Blocker Service"
@@ -139,9 +139,18 @@ class AppBlockerService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val blockedAppList = intent?.getStringArrayListExtra("BLOCK_APPS")
+        val stopPackage = intent?.getStringExtra("STOP_PACKAGE")
 
         if (blockedAppList != null) {
-            blockedApps = blockedAppList.toSet()
+            blockedApps = blockedAppList.toMutableSet()
+        }
+
+        if (stopPackage != null) {
+            blockedApps.remove(stopPackage).apply {
+                if (blockedApps.isEmpty()) {
+                    stopSelf()
+                }
+            }
         }
 
         blockDuration = intent?.getLongExtra("BLOCK_DURATION", 0L) ?: 0L

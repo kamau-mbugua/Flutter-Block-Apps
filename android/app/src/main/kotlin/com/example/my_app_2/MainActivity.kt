@@ -65,10 +65,17 @@ class MainActivity: FlutterActivity(){
                     result.success(null)
                 }
                 "stopService" -> {
+                    val packageName = call.argument<String>("packageName")
                     val intent = Intent(this, AppBlockerService::class.java)
+                    intent.putExtra("STOP_PACKAGE", packageName)
                     stopService(intent)
                     result.success(null)
                 }
+//                "stopService" -> {
+//                    val intent = Intent(this, AppBlockerService::class.java)
+//                    stopService(intent)
+//                    result.success(null)
+//                }
                 else -> result.notImplemented()
             }
         }

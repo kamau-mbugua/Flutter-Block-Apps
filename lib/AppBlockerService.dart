@@ -16,13 +16,21 @@ class AppBlockerService {
   }
 
 
-  static Future<void> stopService() async {
+  static Future<void> stopService(String packageName) async {
     try {
-      await _channel.invokeMethod('stopService');
+      await _channel.invokeMethod('stopService', {'packageName': packageName});
     } on PlatformException catch (e) {
       print("Failed to stop service: '${e.message}'.");
     }
   }
+
+  // static Future<void> stopService() async {
+  //   try {
+  //     await _channel.invokeMethod('stopService');
+  //   } on PlatformException catch (e) {
+  //     print("Failed to stop service: '${e.message}'.");
+  //   }
+  // }
 }
 
 // mixin message {
