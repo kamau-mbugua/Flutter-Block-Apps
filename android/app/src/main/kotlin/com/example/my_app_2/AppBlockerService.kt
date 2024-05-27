@@ -51,6 +51,7 @@ class AppBlockerService : Service() {
     private lateinit var textView : TextView
     private lateinit var progressBar1 : ProgressBar
     private lateinit var progressBar2 : ProgressBar
+    private var lastForegroundApp: String? = null
 
 
     override fun onCreate() {
@@ -186,19 +187,37 @@ class AppBlockerService : Service() {
 
 
 
+//    private val checkForegroundApp = object : Runnable {
+//        override fun run() {
+//            val foregroundApp =
+//                getForegroundApp(this@AppBlockerService) ?: getBackgroundApp(this@AppBlockerService)
+//
+//            Log.e("blockedApps", "blockedApps app: $blockedApps")
+//
+//
+//            if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
+//                overlayLayout.visibility = RelativeLayout.VISIBLE
+//            } else {
+//                overlayLayout.visibility = RelativeLayout.GONE
+//            }
+//            handler.postDelayed(this, 1000) // Check every second
+//        }
+//    }
+
     private val checkForegroundApp = object : Runnable {
         override fun run() {
             val foregroundApp =
                 getForegroundApp(this@AppBlockerService) ?: getBackgroundApp(this@AppBlockerService)
 
-            Log.e("blockedApps", "blockedApps app: $blockedApps")
-
-
-            if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
-                overlayLayout.visibility = RelativeLayout.VISIBLE
-            } else {
-                overlayLayout.visibility = RelativeLayout.GONE
+            if (foregroundApp != lastForegroundApp) {
+                if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
+                    overlayLayout.visibility = RelativeLayout.VISIBLE
+                } else {
+                    overlayLayout.visibility = RelativeLayout.GONE
+                }
+                lastForegroundApp = foregroundApp
             }
+
             handler.postDelayed(this, 1000) // Check every second
         }
     }
