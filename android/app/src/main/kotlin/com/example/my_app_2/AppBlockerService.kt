@@ -52,6 +52,13 @@ class AppBlockerService : Service() {
     private lateinit var progressBar1 : ProgressBar
     private lateinit var progressBar2 : ProgressBar
     private var lastForegroundApp: String? = null
+    private var foregroundApp: String? = null
+
+
+    // Create a map to store CountDownTimer and progress bars for each blocked app
+    private val timers: MutableMap<String, CountDownTimer> = mutableMapOf()
+    private val progressBars1: MutableMap<String, ProgressBar> = mutableMapOf()
+    private val progressBars2: MutableMap<String, ProgressBar> = mutableMapOf()
 
 
     override fun onCreate() {
@@ -156,31 +163,61 @@ class AppBlockerService : Service() {
         blockDuration = intent?.getLongExtra("BLOCK_DURATION", 0L) ?: 0L
         if (blockDuration > 0) {
 
+            for (packageName in blockedApps) {
+                val progressBar1 = ProgressBar(this, null, androidR.attr.progressBarStyleHorizontal)
+                val progressBar2 = ProgressBar(this, null, androidR.attr.progressBarStyleHorizontal)
+                progressBars1[packageName] = progressBar1
+                progressBars2[packageName] = progressBar2
 
-            stopHandler = Handler()
-            blockStartTime = System.currentTimeMillis()
-            stopHandler?.postDelayed({
-                stopSelf()
-            }, blockDuration)
+                val timer = object : CountDownTimer(blockDuration, 1000) {
+                    @TargetApi(Build.VERSION_CODES.GINGERBREAD)
+                    override fun onTick(millisUntilFinished: Long) {
+                        val progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+                        progressBar1.progress = progress
+                        progressBar2.progress = progress
 
-            countdownTimer = object : CountDownTimer(blockDuration, 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                    val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
-                    val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
-                    val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
-//                    countdownText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-                    textView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
-                    progressBar1.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
-                    progressBar2.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
-                    // Update the progress bar
-                    val progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
-//                    progressBar.progress = progress
+                        val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
+                        val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
+                        val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
+                        textView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+
+                        handler.post(updateProgressBars)
+                        Log.d("AppBlockerService Main", "onTick called, progress: $progress")
+                    }
+
+                    override fun onFinish() {
+                        stopSelf()
+                    }
                 }
+                timers[packageName] = timer
+                timer.start()
+            }
 
-                override fun onFinish() {
-                    stopSelf()
-                }
-            }.start()
+//
+//            stopHandler = Handler()
+//            blockStartTime = System.currentTimeMillis()
+//            stopHandler?.postDelayed({
+//                stopSelf()
+//            }, blockDuration)
+//
+//            countdownTimer = object : CountDownTimer(blockDuration, 1000) {
+//                override fun onTick(millisUntilFinished: Long) {
+//                    val hours = TimeUnit.MILLISECONDS.toHours(millisUntilFinished)
+//                    val minutes = TimeUnit.MILLISECONDS.toMinutes(millisUntilFinished) % 60
+//                    val seconds = TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished) % 60
+////                    countdownText.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+//                    textView.text = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+//                    progressBar1.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+//                    progressBar2.progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+//                    // Update the progress bar
+//                    val progress = ((blockDuration - millisUntilFinished) / (blockDuration / 100)).toInt()
+////                    progressBar.progress = progress
+//                }
+//
+//                override fun onFinish() {
+//                    stopSelf()
+//                }
+//            }.start()
         }
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
@@ -195,39 +232,78 @@ class AppBlockerService : Service() {
     }
 
 
-
 //    private val checkForegroundApp = object : Runnable {
 //        override fun run() {
 //            val foregroundApp =
 //                getForegroundApp(this@AppBlockerService) ?: getBackgroundApp(this@AppBlockerService)
 //
-//            Log.e("blockedApps", "blockedApps app: $blockedApps")
-//
-//
-//            if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
-//                overlayLayout.visibility = RelativeLayout.VISIBLE
-//            } else {
-//                overlayLayout.visibility = RelativeLayout.GONE
+//            if (foregroundApp != lastForegroundApp) {
+//                if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
+//                    overlayLayout.visibility = RelativeLayout.VISIBLE
+//                } else {
+//                    overlayLayout.visibility = RelativeLayout.GONE
+//                }
+//                lastForegroundApp = foregroundApp
 //            }
+//
 //            handler.postDelayed(this, 1000) // Check every second
 //        }
 //    }
 
+
     private val checkForegroundApp = object : Runnable {
         override fun run() {
-            val foregroundApp =
+            foregroundApp =
                 getForegroundApp(this@AppBlockerService) ?: getBackgroundApp(this@AppBlockerService)
 
             if (foregroundApp != lastForegroundApp) {
                 if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
                     overlayLayout.visibility = RelativeLayout.VISIBLE
+
+                    // Update the progress bars based on the foreground app
+//                    val progressBar1 = progressBars1[foregroundApp]
+//                    val progressBar2 = progressBars2[foregroundApp]
+//                    overlayLayout.findViewById<ProgressBar>(R.id.progressbar_timerview).progress = progressBar1?.progress ?: 0
+//                    overlayLayout.findViewById<ProgressBar>(R.id.progressbar1_timerview).progress = progressBar2?.progress ?: 0
+
+                    Log.d("AppBlockerService Main2", "Progress bars updated, progress1: ${progressBar1.progress}, progress2: ${progressBar2?.progress}")
                 } else {
                     overlayLayout.visibility = RelativeLayout.GONE
                 }
                 lastForegroundApp = foregroundApp
             }
 
+
+//            if (foregroundApp != lastForegroundApp) {
+//                if (foregroundApp != null && blockedApps.contains(foregroundApp)) {
+//                    overlayLayout.visibility = RelativeLayout.VISIBLE
+//
+//                    // Update the progress bars based on the foreground app
+//                    val progressBar1 = progressBars1[foregroundApp]
+//                    val progressBar2 = progressBars2[foregroundApp]
+//                    overlayLayout.findViewById<ProgressBar>(R.id.progressbar_timerview).progress = progressBar1?.progress ?: 0
+//                    overlayLayout.findViewById<ProgressBar>(R.id.progressbar1_timerview).progress = progressBar2?.progress ?: 0
+//
+//                    Log.d("AppBlockerService Main2", "Progress bars updated, progress1: ${progressBar1?.progress}, progress2: ${progressBar2?.progress}")
+//
+//                } else {
+//                    overlayLayout.visibility = RelativeLayout.GONE
+//                }
+//                lastForegroundApp = foregroundApp
+//            }
+
             handler.postDelayed(this, 1000) // Check every second
+        }
+    }
+
+    private val updateProgressBars = object : Runnable {
+        override fun run() {
+            val progressBar1 = progressBars1[foregroundApp]
+            val progressBar2 = progressBars2[foregroundApp]
+            overlayLayout.findViewById<ProgressBar>(R.id.progressbar_timerview).progress = progressBar1?.progress ?: 0
+            overlayLayout.findViewById<ProgressBar>(R.id.progressbar1_timerview).progress = progressBar2?.progress ?: 0
+
+            handler.postDelayed(this, 1000) // Update every second
         }
     }
 
